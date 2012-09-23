@@ -74,11 +74,8 @@ enum {
 
 
 
-/*
- * 
- */
-int main(int argc, char** arg) {
-	State state = Adv_Customer_WantsToBuy;
+int theGame() {
+	State state = Adv_Beginning;
 
 	// initialize random number generator
 	srand(time(NULL));
@@ -104,7 +101,7 @@ int main(int argc, char** arg) {
 	// make the cursor disappearing
 	setCursorVisible(0);
 	disableConsoleScrolling();
-	
+
 	playCutsceneIntro();
 
 	do {
@@ -142,7 +139,7 @@ int main(int argc, char** arg) {
 
 			case Adv_Sorry_Gemuesetheke: {
 				Dialog dlg = { DLG_SJ, "Tut mir leid, hier ist die Gem&uuml;setheke.\n"
-										"Versuchen Sie es später noch einmal."
+										"Versuchen Sie es sp&auml;ter noch einmal."
 				};
 				playDialog(dlg);
 
@@ -489,7 +486,7 @@ int main(int argc, char** arg) {
 					Dialog dlg = { DLG_CUST,
 									"Nun, jetzt wo Sie das sagen...\n"
 									"Offentsichlich haben die Entwickler dieses guten St&uuml;cks "
-									"doch sehr intensiv dar&uuml;ber nachgedacht."
+									"doch sehr\nintensiv dar&uuml;ber nachgedacht."
 					};
 
 					playDialog(dlg);
@@ -808,6 +805,37 @@ int main(int argc, char** arg) {
 				break;
 			}
 			//</editor-fold>
+
+			//<editor-fold defaultstate="collapsed" desc=" Capture Soul ">
+			case Adv_Customer_WantsToBuy_Soul: {
+				if (buying_imovie_ok && buying_price_ok) {
+					Dialog dlg1 = { DLG_SJ,
+									"Da w&auml;re noch der Vertrag bez&uuml;glich Eurer Seele..."
+					};
+					Dialog dlg2 = { DLG_CUST,
+									"Bei diesem wundervollen Angebot &uuml;berschreibe ich doch mit "
+									"Freuden meine Seele.\n\n"
+									"*Ein Strahlen erhellt die Augen des Kunden, gl&uuml;cklich, in "
+									"unsere\nGemeinschaft eingegliedert zu sein*"
+					};
+
+					playDialog(dlg1);
+					playDialog(dlg2);
+
+					sleepSeconds(1);
+
+					playCutsceneOutro_Won();
+
+					return (EXIT_SUCCESS);
+				}
+				else {
+					playCutsceneOutro_Flaming();
+					return (EXIT_FAILURE);
+				}
+
+				break;
+			}
+			//</editor-fold>
 		}
 	}
 	while(1);
@@ -815,3 +843,39 @@ int main(int argc, char** arg) {
 	return (EXIT_SUCCESS);
 }
 
+int main(int argc, char** arg) {
+	setTextColor(White, Black);
+
+	do {
+		int result = theGame();
+
+		switch(result) {
+			case EXIT_SUCCESS: {
+				return EXIT_SUCCESS;
+			}
+
+			case EXIT_FAILURE: {
+				setTextColor(Red, Black);
+				printMessage(
+							"Ihre Mission ist fehlgeschlagen!\n"
+							"Sie haben es nicht geschafft, diese arme Seele zum Licht zu bringen.\n\n"
+							"Noch ein Versuch?\n\n\n",
+							0, 30
+				);
+
+				Choice c1 = { 1, "Aber sicher!" };
+				Choice c2 = { 1, "Vielleicht?" };
+				Choice c3 = { 0, "N&ouml;." };
+
+				if (selectChoice(3, &c1, &c2, &c3) == 0) {
+					return EXIT_FAILURE;
+				}
+
+				break;
+			}
+		}
+	}
+	while(1);
+
+	return EXIT_SUCCESS;
+}
