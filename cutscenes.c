@@ -136,7 +136,7 @@ extern "C" {
 			}
 		}
 
-		setCursorPosition(0, 20);
+		setCursorPosition(0, 23);
 	}
 
 
@@ -221,6 +221,16 @@ extern "C" {
 		}
 
 		setCursorPosition(0, 23);
+	}
+
+
+	void playCutsceneOutro_Flaming() {
+		return;
+	}
+
+
+	void playCutsceneOutro_Won() {
+		return;
 	}
 
 
