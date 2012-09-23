@@ -144,6 +144,8 @@ extern "C" {
 
 	State selectChoice(int num, ...) {
 		Choice **choices = malloc(num * sizeof(Choice*));
+		int *indices = malloc(num * sizeof(int));
+		int max_index = 0;
 		va_list args;
 		va_start(args, num);
 
@@ -151,15 +153,25 @@ extern "C" {
 		for(i=0; i<num; i++) {
 			Choice *c = va_arg(args, Choice*);
 			choices[i] = c;
+
+			if (c) {
+				indices[i] = max_index;
+				++max_index;
+			}
+			else {
+				indices[i] = -1;
+			}
 		}
 
 		// print all choices
 		setTextColor(Pink, Black);
 
 		for(i=0; i<num; i++) {
-			printf(" [%d] ", (i+1));
-			printMessage(choices[i]->title, 5, 0);
-			printf("\n");
+			if (choices[i]) {
+				printf(" [%d] ", (indices[i] + 1));
+				printMessage(choices[i]->title, 5, 0);
+				printf("\n");
+			}
 		}
 
 		// short delay to prevent accidental keypresses
@@ -170,9 +182,16 @@ extern "C" {
 		do {
 			int value = (getch() - '0' - 1);
 
-			if (value >= 0 && value < num) {
-				selected = value;
-				selected_choice = choices[selected];
+			int z;
+			for(z=0; z<num; z++) {
+				if (value == indices[z]) {
+					selected = z;
+					selected_choice = choices[selected];
+					break;
+				}
+			}
+
+			if (selected_choice) {
 				break;
 			}
 		}
@@ -181,10 +200,10 @@ extern "C" {
 		unsigned short x;
 		unsigned short y;
 		getCursorPosition(&x, &y);
-		setCursorPosition(0, y - num + selected);
+		setCursorPosition(0, y - max_index + indices[selected]);
 
 		setTextColor(White, Pink);
-		printf(" [%d] ", (selected + 1));
+		printf(" [%d] ", (indices[selected] + 1));
 		printMessage(selected_choice->title, 5, 0);
 
 		// wait a moment
@@ -192,8 +211,8 @@ extern "C" {
 
 		// clear the choice selection
 		setTextColor(White, Black);
-		for(i=0; i<num; i++) {
-			setCursorPosition(0, y - num + i);
+		for(i=0; i<max_index; i++) {
+			setCursorPosition(0, y - max_index + i);
 			printf("                                                                                ");
 		}
 

@@ -19,6 +19,9 @@ extern "C" {
 
 	void playCutsceneOutro_JustGoing(Dialog dlg);
 	void playCutsceneOutro_CallMeAnAmbulance();
+	void playCutsceneOutro_Flaming();
+
+	void playCutsceneOutro_Won();
 
 
 #ifdef	__cplusplus

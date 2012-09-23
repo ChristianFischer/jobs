@@ -39,14 +39,32 @@ enum {
 	Adv_Customer_WantsLTE_Arg_Radiation,
 	Adv_Customer_WantsLTE_Arg_NotSupportedByServers,
 	Adv_Customer_WantsLTE_Arg_GetALife,
+	Adv_Customer_WantsLTE_Done,
 
 	Adv_Customer_WantsBiggerScreen,
 	Adv_Customer_WantsBiggerScreen_Arguments,
+	Adv_Customer_WantsBiggerScreen_Arg_Ergnomy,
+	Adv_Customer_WantsBiggerScreen_Arg_MoviesFitScreen,
+	Adv_Customer_WantsBiggerScreen_Arg_BagsDontFit,
+	Adv_Customer_WantsBiggerScreen_Done,
 
 	Adv_Customer_WantsFasterCPU,
 	Adv_Customer_WantsFasterCPU_Arguments,
 
 	Adv_Customer_WantsToBuy,
+	Adv_Customer_WantsToBuy_Decision,
+	Adv_Customer_WantsToBuy_MadeInChina,
+	Adv_Customer_WantsToBuy_Soul,
+	Adv_Customer_WantsToBuy_Price,
+	Adv_Customer_WantsToBuy_Price_Crazy,
+	Adv_Customer_WantsToBuy_Price_Sparabo,
+	Adv_Customer_WantsToBuy_Price_Sparabo_Yes,
+	Adv_Customer_WantsToBuy_Price_Sparabo_No,
+	Adv_Customer_WantsToBuy_Price_SorryNeed,
+	Adv_Customer_WantsToBuy_iMovie,
+	Adv_Customer_WantsToBuy_iMovie_Fuehrer,
+	Adv_Customer_WantsToBuy_iMovie_Movies,
+	Adv_Customer_WantsToBuy_iMovie_Offer,
 
 	Adv_Customer_Leaves,
 };
@@ -60,7 +78,7 @@ enum {
  * 
  */
 int main(int argc, char** arg) {
-	State state = Adv_Beginning;
+	State state = Adv_Customer_WantsToBuy;
 
 	// initialize random number generator
 	srand(time(NULL));
@@ -73,6 +91,15 @@ int main(int argc, char** arg) {
 
 	int lte_arg_radiation_used			= 0;
 	int lte_arg_serversupport_used		= 0;
+
+	int screen_arg_ergonomy_used		= 0;
+	int screen_arg_movies_used			= 0;
+	int screen_arg_bags_used			= 0;
+
+	int buying_made_in_china_avail		= 1;
+	int buying_price_ok					= 0;
+	int buying_soul_ok					= 0;
+	int buying_imovie_ok				= 0;
 
 	// make the cursor disappearing
 	setCursorVisible(0);
@@ -171,12 +198,12 @@ int main(int argc, char** arg) {
 								"Dieses eiFon besticht durch seine Sch&ouml;nheit und Eleganz."
 				};
 
-				if (fuehrer_argument_used) {
-					state = selectChoice(2, &c1, &c3);
-				}
-				else {
-					state = selectChoice(3, &c1, &c2, &c3);
-				}
+				state = selectChoice(
+								3,
+								&c1,
+								(fuehrer_argument_used ? NULL : &c2),
+								&c3
+				);
 
 				break;
 			}
@@ -304,10 +331,10 @@ int main(int argc, char** arg) {
 					++poss_count;
 				}
 
-			//	if (customer_wants_bigger_screen) {
-			//		possibilities[poss_count] = Adv_Customer_WantsBiggerScreen;
-			//		++poss_count;
-			//	}
+				if (customer_wants_bigger_screen) {
+					possibilities[poss_count] = Adv_Customer_WantsBiggerScreen;
+					++poss_count;
+				}
 
 			//	if (customer_wants_faster_cpu) {
 			//		possibilities[poss_count] = Adv_Customer_WantsFasterCPU;
@@ -330,9 +357,9 @@ int main(int argc, char** arg) {
 			case Adv_Customer_WantsLTE: {
 				Dialog dlg1 = { DLG_CUST,
 								"Nun, ich hoffe, dieses Ger&auml;t ist auch in der Lage, "
-								"mit Hilfe der neuesten Mobilfunktechnologien zu kommunizieren, "
-								"damit ich auch am gesellschaftlichen Leben teilnehmen "
-								"und mich mit meinen Kontakten unterhalten kann."
+								"mit Hilfe der\nneuesten Mobilfunktechnologien zu kommunizieren, "
+								"damit ich auch am\ngesellschaftlichen Leben teilnehmen "
+								"und mich mit meinen Kontakten\naustauschen kann."
 				};
 
 				playDialog(dlg1);
@@ -342,27 +369,445 @@ int main(int argc, char** arg) {
 			}
 
 			case Adv_Customer_WantsLTE_Arguments: {
-				Choice c1 = { Adv_Customer_WantsLTE_Arg_Radiation,
-								"Denken Sie an die gef&auml;hrliche Strahlung."
+				if (lte_arg_radiation_used && lte_arg_serversupport_used) {
+					Dialog dlg = { DLG_CUST,
+									"Ich denke Sie haben Recht.\n"
+									"Vermutlich sollte ich auf eine solch gef&auml;hrliche und unn&uuml;tze\n"
+									"Technologie besser verzichten."
+					};
+
+					playDialog(dlg);
+
+					customer_wants_lte = 0;
+
+					state = Adv_Customer_Decision;
+				}
+				else {
+					Choice c1 = { Adv_Customer_WantsLTE_Arg_Radiation,
+									"Denken Sie an die gef&auml;hrliche Strahlung."
+					};
+
+					Choice c2 = { Adv_Customer_WantsLTE_Arg_NotSupportedByServers,
+									"Bedenken Sie, da&szlig; viele Anbieter das gar nicht unterst&uuml;tzen."
+					};
+
+					Choice c3 = { Adv_Customer_WantsLTE_Arg_GetALife,
+									"F&uuml;r ein gesellschaftliches Leben ist das doch gar nicht notwendig."
+					};
+
+					state = selectChoice(
+									3,
+									(lte_arg_radiation_used ? NULL : &c1),
+									(lte_arg_serversupport_used ? NULL : &c2),
+									&c3
+					);
+				}
+
+				break;
+			}
+
+			case Adv_Customer_WantsLTE_Arg_Radiation: {
+				Dialog dlg1 = { DLG_SJ,
+								"Denken Sie an die gef&auml;hrliche Strahlung, welche durch diese Art\n"
+								"von Funkwellen verursacht wird.\n"
+								"Sie l&auml;sst Ihre Testikel schrumpfen und Ihr Gehirn kochen.\n"
+								"Das wollen Sie doch nicht ernsthaft riskieren?"
 				};
 
-				Choice c2 = { Adv_Customer_WantsLTE_Arg_NotSupportedByServers,
-								"Bedenken Sie, da&szlig; viele Server das gar nicht unterst&uuml;tzen."
+				Dialog dlg2 = { DLG_CUST,
+								"Grundg&uuml;tiger!\nDas ist mir bisher noch gar nicht in den Sinn gekommen."
 				};
 
-				Choice c3 = { Adv_Customer_WantsLTE_Arg_GetALife,
-								"Es gibt auch ein Leben au&szlig;erhalb des Internets."
+				playDialog(dlg1);
+				playDialog(dlg2);
+
+				lte_arg_radiation_used = 1;
+				state = Adv_Customer_WantsLTE_Arguments;
+
+				break;
+			}
+
+			case Adv_Customer_WantsLTE_Arg_NotSupportedByServers: {
+				Dialog dlg1 = { DLG_SJ,
+								"Bedenken Sie, da&szlig; viele Anbieter das gar nicht unterst&uuml;tzen.\n"
+								"Hierbei geht es ausschlie&szlig;lich darum, da&szlig; Telekommunikations-\ntechnologieanbieter "
+								"ihren Kunden f&uuml;r teuer Geld Dinge aufschwatzen wollen, die sie gar nicht ben&ouml;tigen."
 				};
+
+				Dialog dlg2 = { DLG_CUST,
+								"Hm.. im Grunde Stimme ich Ihnen da zu..."
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+
+				lte_arg_serversupport_used = 1;
+				state = Adv_Customer_WantsLTE_Arguments;
+
+				break;
+			}
+
+			case Adv_Customer_WantsLTE_Arg_GetALife: {
+				Dialog dlg1 = { DLG_SJ,
+								"F&uuml;r ein gesellschaftliches Leben ist die Art der\nKommunikationstechnologie "
+								"doch im Grunde unerheblich.\n"
+								"Schlie&szlig;lich sollte man seine Kontakte ja nicht nur &uuml;ber "
+								"soziale\nNetzwerke pflegen."
+				};
+
+				Dialog dlg2 = { DLG_CUST,
+								"Haha... Sie sind lustig...\n\n"
+								"Kommen Sie erst einmal im 21. Jahrhundert an!"
+				};
+
+				playDialog(dlg1);
+				sleepSeconds(1);
+
+				playCutsceneOutro_JustGoing(dlg2);
+
+				return (EXIT_FAILURE);
+			}
+			//</editor-fold>
+
+			//<editor-fold defaultstate="collapsed" desc=" Customer wants bigger screen ">
+			case Adv_Customer_WantsBiggerScreen: {
+				Dialog dlg1 = { DLG_CUST,
+								"Allerdings fiel mir doch auf, da&szlig; dieses Ger&auml;t im Vergleich "
+								"zu anderen einen doch recht kleinen Bildschirm besitzt.\n"
+								"Wie soll man denn in der Lage sein, hiermit Kinofilme in ihrer besten\n"
+								"Qualit&auml;t genie&szlig;en zu k&ouml;nnen?"
+				};
+
+				playDialog(dlg1);
+				state = Adv_Customer_WantsBiggerScreen_Arguments;
+
+				break;
+			}
+
+			case Adv_Customer_WantsBiggerScreen_Arguments: {
+				if (screen_arg_ergonomy_used && screen_arg_movies_used) {
+					Dialog dlg = { DLG_CUST,
+									"Nun, jetzt wo Sie das sagen...\n"
+									"Offentsichlich haben die Entwickler dieses guten St&uuml;cks "
+									"doch sehr intensiv dar&uuml;ber nachgedacht."
+					};
+
+					playDialog(dlg);
+
+					customer_wants_bigger_screen = 0;
+
+					state = Adv_Customer_Decision;
+				}
+				else {
+					Choice c1 = { Adv_Customer_WantsBiggerScreen_Arg_Ergnomy,
+									"Die Gr&ouml;&szlig;e des eiFons wurde auf bestm&ouml;gliche Ergonomie hin angepasst."
+					};
+
+					Choice c2 = { Adv_Customer_WantsBiggerScreen_Arg_MoviesFitScreen,
+									"Wir bieten speziell angepasste eiFilme f&uuml;r optimale Bildqualit&auml;t an."
+					};
+
+					Choice c3 = { Adv_Customer_WantsBiggerScreen_Arg_BagsDontFit,
+									"Gr&ouml;&szlig;ere Telefone passen nicht mehr in die meisten Taschen."
+					};
+
+					state = selectChoice(
+									3,
+									(screen_arg_ergonomy_used ? NULL : &c1),
+									(screen_arg_movies_used ? NULL : &c2),
+									(screen_arg_bags_used ? NULL : &c3)
+					);
+				}
+
+				break;
+			}
+
+			case Adv_Customer_WantsBiggerScreen_Arg_Ergnomy: {
+				Dialog dlg1 = { DLG_SJ,
+								"Die Gr&ouml;&szlig;e des eiFons wurde auf bestm&ouml;gliche Ergonomie hin\nangepasst.\n"
+								"So ist sichergestellt, da&szlig; es ein jeder bequem in einer Hand zu\nhalten vermag."
+				};
+
+				Dialog dlg2 = { DLG_CUST,
+								"Nat&uuml;rlich - das ist ja auch wichtig."
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+
+				screen_arg_ergonomy_used = 1;
+				state = Adv_Customer_WantsBiggerScreen_Arguments;
+
+				break;
+			}
+
+			case Adv_Customer_WantsBiggerScreen_Arg_MoviesFitScreen: {
+				Dialog dlg1 = { DLG_SJ,
+								"Wir bieten speziell angepasste eiFilme f&uuml;r optimale Bildqualit&auml;t\nan. "
+								"Bei all diesen Filmen wird ihnen der Unterschied zur\nKinoleinwand kaum auffallen."
+				};
+
+				Dialog dlg2 = { DLG_CUST,
+								"Tats&auml;chlich?"
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+
+				screen_arg_movies_used = 1;
+				state = Adv_Customer_WantsBiggerScreen_Arguments;
+
+				break;
+			}
+
+			case Adv_Customer_WantsBiggerScreen_Arg_BagsDontFit: {
+				Dialog dlg1 = { DLG_SJ,
+								"Wir haben eine Studie durchgef&uuml;hrt, die ergab, da&szlig; diese "
+								"Gr&ouml;&szlig;e den\nverf&uuml;gbaren Platz der meisten Taschen optimal "
+								"ausnutzt.\n"
+								"Somit werden sie keinerlei Transportprobleme mit Ihrem Mobilfunk-\ntelefon bekommen."
+				};
+
+				Dialog dlg2 = { DLG_CUST,
+								"An so etwas habe ich bisher noch gar nicht gedacht."
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+
+				screen_arg_bags_used = 1;
+				state = Adv_Customer_WantsBiggerScreen_Arguments;
 
 				break;
 			}
 			//</editor-fold>
 
+			//<editor-fold defaultstate="collapsed" desc=" Customer wants to buy ">
 			case Adv_Customer_WantsToBuy: {
-				printf("almost won...");
-				return (EXIT_SUCCESS);
+				Dialog dlg1 = { DLG_CUST,
+								"Ich denke, Sie haben mich &uuml;berzeugt.\n"
+								"Was wird es mich kosten, um dieses Wunderwerk "
+								"deutscher Ingenieurs-\nkunst mein Eigen nennen zu k&ouml;nnen?"
+				};
+				
+				playDialog(dlg1);
+				
+				state = Adv_Customer_WantsToBuy_Decision;
+
 				break;
 			}
+
+			case Adv_Customer_WantsToBuy_Decision: {
+				Choice c1 = { Adv_Customer_WantsToBuy_MadeInChina,
+								"Sagten Sie \"deutsche Ingenieurskunst\"?"
+				};
+				Choice c2 = { Adv_Customer_WantsToBuy_Price,
+								"Nur ein kleines Verm&ouml;gen..."
+				};
+				Choice c3 = { Adv_Customer_WantsToBuy_Soul,
+								"Da w&auml;re noch der Vertrag bez&uuml;glich Eurer Seele..."
+				};
+				Choice c4 = { Adv_Customer_WantsToBuy_iMovie,
+								"Au&szlig;erdem w&auml;re da noch unser eiFilm Abonnement..."
+				};
+
+				state = selectChoice(
+							4,
+							(buying_made_in_china_avail ? &c1 : NULL),
+							(buying_price_ok ? NULL : &c2),
+							(buying_soul_ok  ? NULL : &c3),
+							(buying_imovie_ok ? NULL : &c4)
+				);
+
+				// only available the first time
+				buying_made_in_china_avail = 0;
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_MadeInChina: {
+				Dialog dlg1 = { DLG_SJ,
+								"Sagten Sie \"deutsche Ingenieurskunst\"?\n"
+								"Nun, eigentlich lassen wir diese Apparate billig in China fertigen."
+				};
+				Dialog dlg2 = { DLG_CUST,
+								"Oh, wenn das so ist, suche ich mir ein anderes Fachgesch&auml;ft,\n"
+								"bei dem ich besser die heimische Wirtschaft st&auml;rken kann."
+				};
+
+				playDialog(dlg1);
+				sleepSeconds(1);
+				playCutsceneOutro_JustGoing(dlg2);
+
+				return (EXIT_FAILURE);
+			}
+
+			case Adv_Customer_WantsToBuy_Price: {
+				Dialog dlg1 = { DLG_SJ,
+								"Nur ein kleines Verm&ouml;gen..."
+				};
+				Dialog dlg2 = { DLG_CUST,
+								"WAS? Sind Sie verr&uuml;ckt?"
+				};
+
+				Choice c1 = { Adv_Customer_WantsToBuy_Price_Crazy,
+								"Definitiv!"
+				};
+				Choice c2 = { Adv_Customer_WantsToBuy_Price_Sparabo,
+								"F&uuml;r Sie lege ich noch ein Jumba-Sparabo oben drauf."
+				};
+				Choice c3 = { Adv_Customer_WantsToBuy_Price_SorryNeed,
+								"Tut mir leid, da kann ich nichts machen."
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+				state = selectChoice(3, &c1, &c2, &c3);
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_Price_Crazy: {
+				Dialog dlg1 = { DLG_SJ,
+								"Definitiv!"
+				};
+
+				playDialog(dlg1);
+				sleepSeconds(1);
+				state = Adv_Customer_Leaves;
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_Price_Sparabo: {
+				Dialog dlg1 = { DLG_SJ,
+								"F&uuml;r Sie lege ich noch ein Jumba-Sparabo oben drauf.\n"
+								"Im ersten Monat kostenlos!"
+				};
+				Dialog dlg2 = { DLG_CUST,
+								"Sie meinen, ich kann damit jeden Monat bares Geld sparen?"
+				};
+
+				Choice c1 = { Adv_Customer_WantsToBuy_Price_Sparabo_Yes,
+								"Aber sicher!"
+				};
+				Choice c2 = { Adv_Customer_WantsToBuy_Price_Sparabo_No,
+								"Ha ha ha"
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+
+				state = selectChoice(2, &c1, &c2);
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_Price_Sparabo_Yes: {
+				Dialog dlg1 = { DLG_SJ,
+								"Aber sicher!\n"
+								"Ich kann gar nicht in Worte fassen, welche Reicht&uuml;mer sich Ihnen\n"
+								"hiermit er&ouml;ffnen."
+
+				};
+
+				playDialog(dlg1);
+
+				state = Adv_Customer_WantsToBuy_Decision;
+				buying_price_ok = 1;
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_Price_Sparabo_No: {
+				Dialog dlg1 = { DLG_CUST,
+								"Ha ha ha ...\n"
+								"*der Verk&auml;ufer wischt sich eine Lachtr&auml;ne aus dem Auge*\n\n"
+								"Nun, genaugenommen ist das alles nur Betrug..."
+				};
+
+				playDialog(dlg1);
+				sleepSeconds(1);
+				state = Adv_Customer_Leaves;
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_Price_SorryNeed: {
+				Dialog dlg1 = { DLG_CUST,
+								"Tut mir leid, da kann ich nichts machen.\n"
+								"Das Benzin f&uuml;r meine Yachten ist teuer geworden..."
+				};
+
+				playDialog(dlg1);
+				sleepSeconds(1);
+				state = Adv_Customer_Leaves;
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_iMovie: {
+				Dialog dlg1 = { DLG_SJ,
+								"Au&szlig;erdem w&auml;re da noch unser eiFilm Abonnement..."
+				};
+				Dialog dlg2 = { DLG_CUST,
+								"Das h&ouml;rt sich interessant an. Was hat es damit auf sich?"
+				};
+
+				Choice c1 = { Adv_Customer_WantsToBuy_iMovie_Movies,
+								"Wir bieten Ihnen g&uuml;nstige Filme f&uuml;r Ihr eiFon an."
+				};
+				Choice c2 = { Adv_Customer_WantsToBuy_iMovie_Offer,
+								"Nur heute k&ouml;nnen Sie das Filmpaket f&uuml;r den halben Preis buchen."
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+				state = selectChoice(2, &c1, &c2);
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_iMovie_Fuehrer: {
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_iMovie_Movies: {
+				Dialog dlg1 = { DLG_SJ,
+								"Wir bieten Ihnen g&uuml;nstige Filme f&uuml;r Ihr eiFon an.\n"
+								"Somit k&ouml;nnen Sie jederzeit f&uuml;r ein klitzekleines Entgelt "
+								"auf eine\nnicht n&auml;her spezifizierte Anzahl Filme zugreifen."
+				};
+				Dialog dlg2 = { DLG_CUST,
+								"Nun, das h&ouml;rt sich so an, als k&ouml;nne ich kaum darauf verzichten.\n"
+								"Ich nehme es!"
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+				buying_imovie_ok = 1;
+
+				state = Adv_Customer_WantsToBuy_Decision;
+
+				break;
+			}
+
+			case Adv_Customer_WantsToBuy_iMovie_Offer: {
+				Dialog dlg1 = { DLG_SJ,
+								"Nur heute k&ouml;nnen Sie das Filmpaket f&uuml;r den halben Preis buchen."
+				};
+				Dialog dlg2 = { DLG_CUST,
+								"Hm, ich glaube nicht da&szlig; ich das gebrauchen kann..."
+				};
+
+				playDialog(dlg1);
+				playDialog(dlg2);
+
+				state = Adv_Customer_WantsToBuy_Decision;
+
+				break;
+			}
+			//</editor-fold>
 		}
 	}
 	while(1);
